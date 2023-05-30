@@ -9,6 +9,7 @@ import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHt
 import cors from "cors";
 import http from "http";
 import bodyParser from "body-parser";
+import schema from "@src/schema";
 
 const startServer = async () => {
   const NODE_ENV = process.env.NODE_ENV || "dev";
@@ -17,25 +18,10 @@ const startServer = async () => {
 
   const app = express();
 
-  // The GraphQL schema
-  const typeDefs = `#graphql
-  type Query {
-    hello: String
-  }
-`;
-
-  // A map of functions which return data for the schema.
-  const resolvers = {
-    Query: {
-      hello: () => "world",
-    },
-  };
-
   const httpServer = http.createServer(app);
 
   const server = new ApolloServer({
-    typeDefs,
-    resolvers,
+    schema,
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
 
@@ -47,7 +33,8 @@ const startServer = async () => {
     cors(),
     bodyParser.json(),
     expressMiddleware(server, {
-      context: async ({ req }: { req: any }) => {
+      context: async (args) => {
+        const { req } = args;
         return {
           token: req.headers.token,
         };
